@@ -1,0 +1,22 @@
+version: '3'
+
+networks:
+    external-net:
+        name: external-net
+        external: false
+
+services:
+    nginx:
+        image: nginx
+        container_name: nginx
+        restart: always
+        ports:
+            - "8090:8090"
+            - "8008:8008"
+        volumes:
+            - ./ssl/.htpasswd:/etc/nginx/ssl/.htpasswd
+            - ./app.conf:/etc/nginx/conf.d/app.conf
+            - ./ssl/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+            - ./ssl/privkey.pem:/etc/nginx/ssl/privkey.pem
+        networks:
+            - external-net

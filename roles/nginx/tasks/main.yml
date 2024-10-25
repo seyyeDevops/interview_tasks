@@ -1,0 +1,59 @@
+---
+# tasks file for ./roles/nginx
+
+- name: Create a directory /opt/services if it does not exist
+  ansible.builtin.file:
+    path: '{{ default_path }}'
+    state: directory
+    mode: '0755'
+
+- name: Copy the .htpasswd
+  ansible.builtin.copy:
+    src: .htpasswd
+    dest: '{{ default_path }}/ssl/'
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: Move docker compose and nginx config files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0744'
+  loop:
+    - { src: 'compose.j2', dest: '{{ default_path }}/compose.yml' }
+    - { src: 'app.j2', dest: '{{ default_path }}/app.conf' }
+
+- name: Check if SSL certificate exists
+  ansible.builtin.stat:
+    path: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+  register: cert_status
+
+- name: Obtain SSL certificates
+  ansible.builtin.command: >
+    certbot certonly --standalone -d {{ domain }} --non-interactive --agree-tos --email {{ cert_email }}
+  when: not cert_status.stat.exists
+
+- name: Create SSL directory if it doesn't exist
+  ansible.builtin.file:
+    path: "{{ default_path }}/ssl"
+    state: directory
+    mode: '0755'
+
+- name: Copy fullchain.pem to SSL directory
+  ansible.builtin.copy:
+    src: /etc/letsencrypt/live/{{ domain }}/fullchain.pem
+    dest: "{{ default_path }}/ssl/fullchain.pem"
+    remote_src: yes
+
+- name: Copy privkey.pem to SSL directory
+  ansible.builtin.copy:
+    src: /etc/letsencrypt/live/{{ domain }}/privkey.pem
+    dest: "{{ default_path }}/ssl/privkey.pem"
+    remote_src: yes
+    mode: '0600'
+
+- name: Start servicess
+  community.docker.docker_compose_v2:
+    project_src: "/opt/services"
+  tags: docker

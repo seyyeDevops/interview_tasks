@@ -1,0 +1,11 @@
+[Unit]
+Description=Log Generation Script Service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/log_sender.sh
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,50 @@
+- name: Move script file
+  copy:
+    src: log_sender.sh
+    dest: /usr/local/bin/log_sender.sh
+    mode: '0755'
+
+- name: Move systemd service file
+  copy:
+    src: log_sender.service
+    dest: /etc/systemd/system/log_sender.service
+    mode: '0644'
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reload
+
+- name: Start and enable the log_sender service
+  systemd:
+    name: log_sender
+    state: started
+    enabled: yes
+
+- name: Create a directory /opt/services if it does not exist
+  ansible.builtin.file:
+    path: /opt/services
+    state: directory
+    mode: '0755'
+
+- name: Move rsyslog configuration files
+  copy:
+    src: rsyslog/
+    dest: /opt/services
+    mode: '0755'
+
+- name: Build rsyslog image
+  community.docker.docker_image_build:
+    name: rsyslog:v1
+    path: "/opt/services"
+    dockerfile: Dockerfile
+  tags: build
+
+- name: Move Docker Compose file
+  copy:
+    src: compose.yml
+    dest: /opt/services/compose.yml
+    mode: '0644'
+
+- name: Start services
+  community.docker.docker_compose_v2:
+    project_src: "/opt/services"
+  tags: docker

@@ -1,0 +1,5 @@
+---
+# defaults file for ./roles/nginx
+default_path: /opt/services
+domain: playops.ir
+cert_email: seyedmahditayeb@gmail.com
