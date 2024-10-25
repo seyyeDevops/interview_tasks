@@ -1,33 +1,32 @@
-version: '3.8'
-
-networks:
-  kafka-net:
-    driver: bridge
-
+version: '3'
 
 services:
+  # Build image from rsyslog dir
   syslog:
+    build:
+      context: rsyslog/.
     image: rsyslog:v1
-    container_name: syslog
     ports:
       - "5140:5140"
     networks:
-      kafka-net:
+      - kafka-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
+    networks:
+      - kafka-net
     ports:
       - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-    networks:
-      kafka-net:
 
   kafka:
     image: confluentinc/cp-kafka:latest
     hostname: kafka
     container_name: kafka
+    networks:
+      - kafka-net
     ports:
       - "9092:9092"
     environment:
@@ -36,57 +35,41 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      kafka-net:
-
 
   elasticsearch:
-    container_name: elastic
+    container_name: elasticsearch
+    hostname: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.2
     ports:
       - "9200:9200"
       - "9300:9300"
     environment:
-      - xpack.security.enabled=false
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - cluster.routing.allocation.disk.threshold_enabled=false
     ulimits:
       memlock:
         soft: -1
         hard: -1
+    networks:
+      - kafka-net
 
-  connect:
-    container_name: kafka-connect
-    image: confluentinc/cp-kafka-connect:latest
+  logstash:
+    container_name: logstash
+    hostname: logstash
+    image: docker.elastic.co/logstash/logstash:7.10.2
     ports:
-      - "8083:8083"
-    depends_on:
-      - zookeeper
-      - kafka
+      - "5044:5044"
     volumes:
-      - $PWD/connect-plugins:/connect-plugins
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
     environment:
-      CONNECT_REST_ADVERTISED_HOST_NAME: "kafka-connect"
-      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: "connect"
-      CONNECT_CONFIG_STORAGE_TOPIC: connect-config
-      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
-      CONNECT_STATUS_STORAGE_TOPIC: connect-status
-      CONNECT_REPLICATION_FACTOR: 1
-      CONNECT_PLUGIN_PATH: /connect-plugins
-      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - kafka-net
 
   kibana:
     container_name: kibana
+    hostname: kibana
     image: docker.elastic.co/kibana/kibana:7.10.2
     ports:
       - '5601:5601'
@@ -94,4 +77,28 @@ services:
       - elasticsearch
     environment:
       SERVER_NAME: kibana.example.org
-      ELASTICSEARCH_HOSTS: '["http://elastic:9200"]'
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    networks:
+      - kafka-net
+
+  ftp:
+    image: stilliard/pure-ftpd:hardened
+    container_name: ftp
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009"
+    environment:
+      - FTP_USER_NAME=rsyslog
+      - FTP_USER_PASS=StrongPassword1
+      - FTP_USER_HOME=/home/ftpusers/rsyslog
+    volumes:
+      - rsyslog-logs:/home/ftpusers/rsyslog
+    networks:
+      - kafka-net
+
+networks:
+  kafka-net:
+    driver: bridge
+
+volumes:
+  rsyslog-logs:
