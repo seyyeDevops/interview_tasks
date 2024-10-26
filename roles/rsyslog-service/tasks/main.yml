@@ -7,7 +7,7 @@
 - name: Move systemd service file
   copy:
     src: log_sender.service
-    dest: /etc/systemd/system/log_sender.service
+    dest:         
     mode: '0644'
 
 - name: Reload systemd daemon

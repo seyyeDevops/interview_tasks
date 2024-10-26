@@ -80,3 +80,7 @@ This repository contains Ansible playbooks and roles for setting up Docker, Ngin
     ```sh
     ansible-playbook -i hosts.yml playbooks/nginx.yml
     ```
+
+
+Note:
+To use the ftp server on /var/log : lftp ftp://rsyslog:StrongPassword1@24.144.66.248

@@ -1,13 +1,16 @@
 version: '3'
 
 services:
-  # Build image from rsyslog dir
-  syslog:
+    # Build image from rsyslog dir
+  rsyslog:
+    container_name: rsyslog
     build:
       context: rsyslog/.
     image: rsyslog:v1
     ports:
       - "5140:5140"
+    volumes:
+      - rsyslog-logs:/var/log
     networks:
       - kafka-net
 
@@ -98,7 +101,9 @@ services:
 
 networks:
   kafka-net:
+    name: kafka-net
     driver: bridge
 
 volumes:
   rsyslog-logs:
+    name: rsyslog-logs
