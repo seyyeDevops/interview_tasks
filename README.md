@@ -4,7 +4,6 @@ This repository contains Ansible playbooks and roles for setting up Docker, Ngin
 
 ## Project Structure
 
-
 ### Ansible Configuration
 
 - **ansible.cfg**: Configuration file for Ansible.
@@ -14,7 +13,7 @@ This repository contains Ansible playbooks and roles for setting up Docker, Ngin
 
 - **playbooks/docker.yaml**: Playbook for setting up Docker.
 - **playbooks/nginx.yml**: Playbook for setting up Nginx.
-- **playbooks/rsyslog.yml**: Playbook for setting up Rsyslog.
+- **playbooks/rsyslog.yml**: Playbook for setting up Rsyslog. SERVICES -> RSYSLOG ->‌ KAFKA -> LOGSTASH -> ELASTIC
 
 ### Roles
 
@@ -66,6 +65,24 @@ This repository contains Ansible playbooks and roles for setting up Docker, Ngin
 
 **Explanation**: This file contains the instructions to build a Docker image for Rsyslog, including installing necessary packages and copying configuration files.
 
+### Configuration Files
+
+- **rsyslog/log.conf**: Configuration file for Rsyslog.
+
+**Explanation**: This file contains the configuration settings for Rsyslog, defining how logs are processed and where they are stored.
+
+### Systemd Service
+
+- **log_sender.service**: Systemd service file for log sender.
+
+**Explanation**: This file defines a systemd service for the log sender script, ensuring it runs as a background service.
+
+### Shell Script
+
+- **log_sender.sh**: Shell script for log sender.
+
+**Explanation**: This script is responsible for sending logs to a specified destination. It is executed by the systemd service.
+
 ## Usage
 
 1. Clone the repository:
@@ -80,6 +97,9 @@ This repository contains Ansible playbooks and roles for setting up Docker, Ngin
     ```sh
     ansible-playbook -i hosts.yml playbooks/nginx.yml
     ```
+
+Note:
+To use the ftp server on /var/log : lftp ftp://rsyslog:StrongPassword1@24.144.66.248
 
 
 Note:
