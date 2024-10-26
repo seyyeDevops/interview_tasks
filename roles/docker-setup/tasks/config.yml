@@ -11,3 +11,9 @@
     src: "daemon.j2"
     dest: "/etc/docker/daemon.json"
     mode: '0644'
+
+- name: Restart service docker and daemon-reload to pick up config changes
+  ansible.builtin.systemd:
+    state: restarted
+    daemon_reload: true
+    name: docker

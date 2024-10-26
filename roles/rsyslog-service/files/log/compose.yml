@@ -13,7 +13,6 @@
         - rsyslog-logs:/var/log
       networks:
         - kafka-net
-      user: "1001:1001"
 
     # Build image from zookeeper dir
     zookeeper:
@@ -113,6 +112,8 @@
               kafka:
                 properties:
                   bootstrap.servers: "kafka:9092"
+      networks:
+        - kafka-net
 
   networks:
     kafka-net:
