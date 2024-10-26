@@ -16,4 +16,12 @@ VOLUME ["/var/log"]
 # UDP listen port
 EXPOSE 5140/tcp
 
+# Create a non-root user with a specific UID and GID
+RUN groupadd -g 1001 rsysloggroup && \
+    useradd -u 1001 -g rsysloggroup -s /bin/bash -m rsysloguser && \
+    chown -R rsysloguser:rsysloggroup /var/log
+
+# Switch to the new user
+USER rsysloguser
+
 CMD ["/usr/sbin/rsyslogd", "-n"]

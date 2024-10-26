@@ -13,7 +13,9 @@ services:
       - rsyslog-logs:/var/log
     networks:
       - kafka-net
+    user: "1001:1001"
 
+  # Build image from zookeeper dir
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper

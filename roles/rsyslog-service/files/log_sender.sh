@@ -19,4 +19,4 @@ while true; do
     logger -n 127.0.0.1 -P 5140 -T -t "${HEADER}" -p "${FACILITY}.${PRIORITY}" "${MESSAGE}"
 
     sleep 2
-done
+done        
